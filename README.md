@@ -7,10 +7,10 @@
 ### Social Links Hub — Ayush Gupta
 
 <p align="center">
-  <a href="https://aayush.rf.gd">
+  <a href="https://https://ayusheduverse.github.io/AyushLinks/">
     <img src="https://img.shields.io/badge/Live_Demo-🌐-E11D48?style=for-the-badge&labelColor=1a1a1a" alt="Live Demo">
   </a>
-  <a href="https://github.com/AyushEduverse">
+  <a href="https://github.com/AyushEduverse/AyushLinks">
     <img src="https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github" alt="GitHub Repo">
   </a>
 </p>
