@@ -57,6 +57,8 @@ const SocialInteraction = {
     const avatar = document.getElementById('avatar');
     if (!avatar) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Skip mouse tilt on touch devices to avoid conflict with touch 3D tilt
+    if (!window.matchMedia('(hover: hover)').matches) return;
 
     avatar.addEventListener('mousemove', function (e) {
       const rect = avatar.getBoundingClientRect();

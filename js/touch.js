@@ -207,60 +207,170 @@ const TouchController = {
   },
 
   /* =============================================
-     LEVEL 2c — LONG-PRESS TOOLTIP (Mobile)
+     LEVEL 2c — LONG-PRESS TOOLTIP + COPY-LINK (Mobile)
      ============================================= */
   setupTouchTooltips: function () {
     const buttons = document.querySelectorAll('.social-icon-btn');
     if (!buttons.length) return;
 
     buttons.forEach(function (btn) {
-      let timer = null;
-      let isCancelled = false;
+      let tooltipTimer = null;
+      let copyTimer = null;
+
+      let tooltipCancelled = false;
+      let copyCancelled = false;
+
       let startX = 0, startY = 0;
+      let touchId = null;
+
+      function resetCopyState() {
+        copyCancelled = true;
+        if (copyTimer) {
+          clearTimeout(copyTimer);
+          copyTimer = null;
+        }
+      }
 
       btn.addEventListener('pointerdown', function (e) {
         if (e.pointerType !== 'touch') return;
-        isCancelled = false;
+
+        // Only track one pointer at a time for long-press behaviors.
+        // If another touch starts, cancel copy/tooltip.
+        if (touchId !== null && touchId !== e.pointerId) {
+          tooltipCancelled = true;
+          resetCopyState();
+        }
+        touchId = e.pointerId;
+
+        const url = btn.getAttribute('href');
+        tooltipCancelled = false;
+        copyCancelled = false;
+
         startX = e.clientX;
         startY = e.clientY;
 
-        timer = setTimeout(function () {
-          if (!isCancelled) {
+        // 1) Existing tooltip long-press (500ms)
+        tooltipTimer = setTimeout(function () {
+          if (!tooltipCancelled) {
             btn.classList.add('touch-tooltip-visible');
-            // Brief haptic feedback if available
             if (navigator.vibrate) navigator.vibrate(10);
           }
         }, 500);
+
+        // 2) New copy-link long-press (800ms)
+        // Requires: Clipboard API available + valid URL.
+        if (url) {
+          copyTimer = setTimeout(async function () {
+            if (copyCancelled) return;
+
+            try {
+              if (!navigator.clipboard || !window.isSecureContext) {
+                // Clipboard API may be blocked on non-HTTPS contexts.
+                throw new Error('Clipboard unavailable');
+              }
+
+              await navigator.clipboard.writeText(url);
+              TouchController.showToast('Link copied');
+            } catch (err) {
+              // Graceful fallback: no toast.
+              console.warn('[Touch] Copy link failed:', err);
+            }
+          }, 800);
+        }
       });
 
       btn.addEventListener('pointermove', function (e) {
         if (e.pointerType !== 'touch') return;
-        // Cancel long-press if finger moved too much (scroll resistance)
+        if (touchId !== null && e.pointerId !== touchId) return;
+
         const dx = Math.abs(e.clientX - startX);
         const dy = Math.abs(e.clientY - startY);
+
+        // Cancel if finger moved too much (scroll resistance)
         if (dx > 10 || dy > 10) {
-          isCancelled = true;
-          if (timer) { clearTimeout(timer); timer = null; }
+          tooltipCancelled = true;
+          resetCopyState();
+          if (tooltipTimer) {
+            clearTimeout(tooltipTimer);
+            tooltipTimer = null;
+          }
           btn.classList.remove('touch-tooltip-visible');
         }
       });
 
-      btn.addEventListener('pointerup', function () {
-        if (timer) { clearTimeout(timer); timer = null; }
+      btn.addEventListener('pointerup', function (e) {
+        if (e.pointerType !== 'touch') return;
+        if (touchId !== null && e.pointerId !== touchId) return;
+
+        if (tooltipTimer) {
+          clearTimeout(tooltipTimer);
+          tooltipTimer = null;
+        }
+        resetCopyState();
+
         // If tooltip was visible, keep it briefly then hide
         if (btn.classList.contains('touch-tooltip-visible')) {
           setTimeout(function () {
             btn.classList.remove('touch-tooltip-visible');
           }, 1200);
         }
+
+        touchId = null;
       });
 
-      btn.addEventListener('pointerleave', function () {
-        if (timer) { clearTimeout(timer); timer = null; }
+      btn.addEventListener('pointerleave', function (e) {
+        if (e.pointerType !== 'touch') return;
+        if (touchId !== null && e.pointerId !== touchId) return;
+
+        if (tooltipTimer) {
+          clearTimeout(tooltipTimer);
+          tooltipTimer = null;
+        }
+        resetCopyState();
         btn.classList.remove('touch-tooltip-visible');
+        touchId = null;
+      });
+
+      btn.addEventListener('pointercancel', function (e) {
+        if (e.pointerType !== 'touch') return;
+        if (touchId !== null && e.pointerId !== touchId) return;
+
+        if (tooltipTimer) {
+          clearTimeout(tooltipTimer);
+          tooltipTimer = null;
+        }
+        resetCopyState();
+        btn.classList.remove('touch-tooltip-visible');
+        touchId = null;
       });
     });
   },
+
+  /* --------------------------------------------------
+     TOAST (used by copy-link)
+     -------------------------------------------------- */
+  showToast: function (message) {
+    const existing = document.querySelector('.bb-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'bb-toast';
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(function () {
+      toast.classList.add('bb-toast--visible');
+    });
+
+    setTimeout(function () {
+      toast.classList.remove('bb-toast--visible');
+      setTimeout(function () {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 200);
+    }, 1200);
+  },
+
 
   /* =============================================
      LEVEL 3a — AVATAR 3D TOUCH TILT
@@ -334,7 +444,7 @@ const TouchController = {
     this.trailCtx = this.trailCanvas.getContext('2d');
     this.resizeTrailCanvas();
 
-    var self = this;
+    const self = this;
     window.addEventListener('resize', function () { self.resizeTrailCanvas(); });
 
     var isActive = false;
@@ -367,15 +477,15 @@ const TouchController = {
   },
 
   spawnTrailParticles: function (x, y, count) {
-    var colors = [
-      'rgba(225, 29, 72,',  // accent red
-      'rgba(190, 18, 60,',  // accent dim
-      'rgba(244, 114, 182,',// soft pink
-      'rgba(251, 146, 60,', // warm orange
-      'rgba(255, 255, 255,' // white
+    const colors = [
+      'rgba(225, 29, 72,',
+      'rgba(190, 18, 60,',
+      'rgba(244, 114, 182,',
+      'rgba(251, 146, 60,',
+      'rgba(255, 255, 255,'
     ];
 
-    for (var i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
       this.trailParticles.push({
         x: x + (Math.random() - 0.5) * 8,
         y: y + (Math.random() - 0.5) * 8,
@@ -393,11 +503,17 @@ const TouchController = {
     if (this.trailParticles.length > 200) {
       this.trailParticles.splice(0, this.trailParticles.length - 200);
     }
+
+    // Restart trail animation loop if it died (particles decayed to zero)
+    // so new particles spawned mid-gesture are rendered immediately
+    if (!this.trailAnimId) {
+      this.animateTrail();
+    }
   },
 
   animateTrail: function () {
-    var self = this;
-    if (this.trailAnimId) return; // Already running
+    const self = this;
+    if (this.trailAnimId) return;
 
     function loop() {
       if (self.trailParticles.length === 0) {
@@ -412,22 +528,23 @@ const TouchController = {
     }
 
     self.trailAnimId = requestAnimationFrame(loop);
-  },  drawTrailClear: function () {
-    var ctx = this.trailCtx;
+  },
+
+  drawTrailClear: function () {
+    const ctx = this.trailCtx;
     if (!ctx) return;
     ctx.clearRect(0, 0, this.trailCanvas.width, this.trailCanvas.height);
   },
 
   drawTrail: function () {
-    var ctx = this.trailCtx;
+    const ctx = this.trailCtx;
     if (!ctx) return;
 
-    // Clear the entire canvas — no background fill accumulation
     ctx.clearRect(0, 0, this.trailCanvas.width, this.trailCanvas.height);
 
-    for (var i = 0; i < this.trailParticles.length; i++) {
-      var p = this.trailParticles[i];
-      var alpha = p.life * 0.6;
+    for (let i = 0; i < this.trailParticles.length; i++) {
+      const p = this.trailParticles[i];
+      const alpha = p.life * 0.6;
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
@@ -445,8 +562,8 @@ const TouchController = {
   },
 
   updateTrail: function () {
-    for (var i = this.trailParticles.length - 1; i >= 0; i--) {
-      var p = this.trailParticles[i];
+    for (let i = this.trailParticles.length - 1; i >= 0; i--) {
+      const p = this.trailParticles[i];
       p.x += p.speedX;
       p.y += p.speedY;
       p.speedY += p.gravity;

@@ -57,6 +57,7 @@
   position: relative;
   width: 128px;
   height: 128px;
+  aspect-ratio: 1;
   border-radius: 50%;
   object-fit: cover;
   display: block;

@@ -8,7 +8,8 @@ const ThemeController = {
 
   init: function () {
     // Restore saved preference, else use system
-    const saved = localStorage.getItem('theme-preference');
+    let saved = null;
+    try { saved = localStorage.getItem('theme-preference'); } catch (_) {}
     if (saved === 'dark' || saved === 'light') {
       this.currentTheme = saved;
     } else {
@@ -24,7 +25,9 @@ const ThemeController = {
     // Listen for system preference changes (only if no manual save)
     var self = this;
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-      if (!localStorage.getItem('theme-preference')) {
+      var saved = null;
+      try { saved = localStorage.getItem('theme-preference'); } catch (_) {}
+      if (!saved) {
         self.currentTheme = e.matches ? 'dark' : 'light';
         self.applyTheme(true);
       }
@@ -54,7 +57,9 @@ const ThemeController = {
    */
   toggle: function () {
     this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('theme-preference', this.currentTheme);
+    try {
+      localStorage.setItem('theme-preference', this.currentTheme);
+    } catch (_) {}
 
     // Animate the theme transition
     this.animateElasticReveal();
@@ -189,8 +194,7 @@ const ThemeController = {
       })
       // Swap at peak
       .call(function () {
-        icon.className = 'ri-moon-line';
-        if (isDark) icon.className = 'ri-sun-line';
+        icon.className = isDark ? 'ri-sun-line' : 'ri-moon-line';
       })
       // Enter: 300ms — slower, spring bounce for premium feel
       .to(icon, {
@@ -200,8 +204,7 @@ const ThemeController = {
         ease: 'back.out(1.7)'
       });
     } else {
-      icon.className = 'ri-moon-line';
-      if (isDark) icon.className = 'ri-sun-line';
+      icon.className = isDark ? 'ri-sun-line' : 'ri-moon-line';
     }
   },
 

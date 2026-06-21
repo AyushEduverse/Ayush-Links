@@ -3,6 +3,13 @@
    Subtle ongoing animations for every element
    ============================================ */
 
+/* Prevent FOUC — GSAP sets opacity:0 via JS, but CSS ensures
+   elements start hidden before JS runs */
+#avatar, #name, #tagline, #typed-section, #divider, #social-title,
+.social-icon-btn, .hire-cta, #footer {
+  opacity: 0;
+}
+
 /* ============================================
    2. TAGLINE — Underline Reveal on Hover
    ============================================ */
@@ -176,6 +183,7 @@
   .tagline::after { display: none; }
   .hire-cta-progress { display: none; }
   .hire-cta.is-loading { animation: none; }
+  .theme-wave { display: none !important; }
 }
 
 /* ============================================

@@ -25,6 +25,21 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Custom scrollbar — cosmic brand */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent-dim);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
 /* Selection color */
 ::selection {
   background: var(--accent);
@@ -122,4 +137,4 @@ noscript {
 .justify-center { justify-content: center; }
 .mt-2 { margin-top: 8px; }
 .mt-4 { margin-top: 16px; }
-.mt-5 { margin-top: 20px; }
+.mt-6 { margin-top: 24px; }

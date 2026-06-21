@@ -17,7 +17,6 @@ const StarsController = {
 
     this.ctx = this.canvas.getContext('2d');
     this.resize();
-    this.createParticles();
     this.animate();
 
     // Resize on window change (debounced)

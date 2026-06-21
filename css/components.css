@@ -85,7 +85,8 @@
 
 .social-icon-btn:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 /* ============================================
@@ -130,7 +131,8 @@
   z-index: -1;
 }
 
-.social-icon-btn:hover .tooltip {
+.social-icon-btn:hover .tooltip,
+.social-icon-btn:focus-visible .tooltip {
   opacity: 1;
   transform: translateX(-50%) translateY(0) scale(1);
 }
@@ -149,7 +151,8 @@
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
-.social-icon-btn:nth-child(n+6):hover .tooltip {
+.social-icon-btn:nth-child(n+6):hover .tooltip,
+.social-icon-btn:nth-child(n+6):focus-visible .tooltip {
   transform: translateX(-50%) translateY(0) scale(1);
 }
 .social-icon-btn:nth-child(n+6).touch-tooltip-visible .tooltip {
@@ -282,6 +285,12 @@
   transform: scale(0.98);
 }
 
+.hire-cta:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent);
+}
+
 .hire-cta i {
   font-size: 20px;
   line-height: 1;
@@ -305,6 +314,9 @@
   border-radius: 12px;
   border: 1.5px solid var(--border);
   background: var(--bg-card);
+  background: color-mix(in srgb, var(--bg-card) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -337,7 +349,8 @@
 
 .theme-toggle:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 /* ============================================
